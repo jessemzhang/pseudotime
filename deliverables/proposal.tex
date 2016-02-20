@@ -1,0 +1,111 @@
+\documentclass[11pt,onecolumn]{article}
+
+\usepackage[lmargin=0.75in,rmargin=0.75in,tmargin=.75in,bmargin=0.7in]{geometry}
+
+
+\usepackage[tbtags]{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{subfigure}
+\usepackage{cite}
+\usepackage{calc}
+\usepackage{color}
+\usepackage{epsfig}
+%\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{enumerate}
+\usepackage{bm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+% \usepackage{cite}
+
+\newtheorem{defn}{Definition}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{prop}{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{example}{Example}
+\newtheorem{conj}[thm]{Conjecture}
+\newtheorem{constr}[thm]{Construction}
+\newtheorem{note}{Remark}
+\newcommand{\bit}{\begin{itemize}}
+\newcommand{\eit}{\end{itemize}}
+\newcommand{\bcor}{\begin{cor}}
+\newcommand{\ecor}{\end{cor}}
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\beqn}{\begin{equation*}}
+\newcommand{\eeqn}{\end{equation*}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\bean}{\begin{eqnarray*}}
+\newcommand{\eean}{\end{eqnarray*}}
+\newcommand{\ben}{\begin{enumerate}}
+\newcommand{\een}{\end{enumerate}}
+\newcommand{\bdefn}{\begin{defn}}
+\newcommand{\edefn}{\end{defn}}
+\newcommand{\bnote}{\begin{note}}
+\newcommand{\enote}{\end{note}}
+\newcommand{\bprop}{\begin{prop}}
+\newcommand{\eprop}{\end{prop}}
+\newcommand{\blem}{\begin{lem}}
+\newcommand{\elem}{\end{lem}}
+\newcommand{\bthm}{\begin{thm}}
+\newcommand{\ethm}{\end{thm}}
+\newcommand{\bconj}{\begin{conj}}
+\newcommand{\econj}{\end{conj}}
+\newcommand{\bconstr}{\begin{constr}}
+\newcommand{\econstr}{\end{constr}}
+\newcommand{\bpf}{\begin{proof}}
+\newcommand{\epf}{\end{proof}}
+\newcommand{\bprf}{{\em Proof: }}
+\newcommand{\bproof}{{\em Proof of }}
+\newcommand{\eproof}{\hfill $\Box$}
+\newcommand{\argmin}{\operatornamewithlimits{arg \ min}}
+\newcommand{\argmax}{\operatornamewithlimits{arg \ max}}
+
+\setlength\parindent{0pt} %noindent for all paragraphs
+\algnewcommand{\And}{\textbf{and}\xspace} 
+\def\today{\number\day\space\ifcase\month\or January\or February\or March\or April\or May\or June\or July\or August\or September\or October\or November\or December\fi\space\number\year} %the 'right' date format
+
+
+%\pdfinfo{%
+%  /Title    (HADOOP : NetApp's Perspective - Our Understanding)
+%  /Author   (GK)
+%  /Creator  ()
+%  /Producer ()
+%  /Subject  (Documentation)
+%  /Keywords (Coding for Hadoop)
+%}
+
+\title{EE 377 Project Proposal}
+\author{Govinda Kamath and Jesse Zhang}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+ 
+\section{Motivation}
+With recent advancements in RNA sequencing (RNA-seq) technologies, scientists have enjoyed a surplus of data at the resolution of individual cells. One of the most interesting problems in biology is that of determining the differentiation patterns of cells, such as the process of a stem cell evolving (or differentiating) into a heart cell. A recent experiment [1] has produced a single-cell RNA-seq dataset consisting of 271 human primary myoblasts collected at four different times. The authors attempt to order these cells according to a so-called ``pseudotime" or a latent variable that quantifies how differentiated a given cell is. Attempts of studying cell differentiation have been performed by various groups using various methods. For example, Mueller et al. [2] attempts to order \textit{batches} of sampled cells according to the distributions of certain transcripts (or features) within clusters. For this project, we hope to combine the notion of measuring the distance between cells based on distributions of certain transcripts with the concept of ``pseudotime." We hope that by doing this, we can obtain a more biologically meaningful (and statistically sound) ordering of the 271 primary myoblasts. The success of this project could lead to meaningful insights in modeling cell differentiation; these techniques can perhaps be applied to other single-cell datasets studying the growth of cancer, for example.
+
+\section{Approach}
+The problem is as follows: for each of $T$ sampling times, we are given $n$ length-$d$ vectors (representing $n$ cells each of which are described with $d$ features or transcripts/genes). We want to get a partial ordering on the cells such that a cell that comes later is further along the differentiation process. We do not know \textit{a priori} the number of clusters and the number of end states. In other words, a single cell has a non-zero probability of taking multiple differentiation paths, ending at one of multiple unique end states. \\
+
+We want to model the differentiation process as a latent continuous-time Markov chain (CTMC) where states represent cell types and transition rates represent times required to transition from one cell state to another. We would want to do inference on such a model. \\
+
+One potential approach taken in [3] is to cluster the $Tn$ cells into $k$ clusters and then draw a minimum-spanning tree through the $k$ centroids. We hope that over the course of this quarter, we will be able to apply what we learn to estimating both the structure of the CTMC and the values of the parameters. It would also be interesting to identify the relationship between number of samples and model complexity. 
+
+\section{Desired results}
+We hope to find a good ordering of the 271 cells, and we evaluate how ``good" our results are using the authors' results and by looking at gene patterns. In particular, we hope to provide theoretical justification for our results based on clustering using chosen distance metrics and running a minimum-spanning tree on the cluster centroids to give us a partial ordering [3]. Because we do not fully understand the theoretical implications of this project just yet, we could potentially fail to model the problem in a tractable but reasonable manner. For example, perhaps a CTMC will turn out to be suboptimal for the dataset and we will have to consider other models.
+
+\section{References}
+\begin{enumerate}
+	\item Trapnell, Cole, Davide Cacchiarelli, Jonna Grimsby, Prapti Pokharel, Shuqiang Li, Michael Morse, Niall J. Lennon, Kenneth J. Livak, Tarjei S. Mikkelsen, and John L. Rinn. "The dynamics and regulators of cell fate decisions are revealed by pseudotemporal ordering of single cells." Nature biotechnology 32, no. 4 (2014): 381-386.
+	\item Mueller, Jonas, Tommi Jaakkola, and David Gifford. "Modeling Trends in Distributions." arXiv preprint arXiv:1511.04486 (2015).
+	\item Ntranos, Vasilis, Govinda M. Kamath, Jesse Zhang, Lior Pachter, and N. Tse David. "Fast and accurate single-cell RNA-Seq analysis by clustering of transcript-compatibility counts." bioRxiv (2016): 036863.
+\end{enumerate}
+
+\end{document}
