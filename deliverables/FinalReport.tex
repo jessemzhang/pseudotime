@@ -134,7 +134,7 @@ Given the structure of the CTMC and these observations, we can easily estimate a
 \begin{align*}
 	P_t(A,A) = P(t_A \geq t) = e^{-\lambda_1 t} \implies \hat{\lambda}_1 = -\frac{1}{t} \log \frac{\# \mbox{ type $A$ cells at $t$}}{\# \mbox{ type $A$ cells at time 0}}
 \end{align*}
-After estimating $\lambda_1$, we can estimate $\lambda_2$ and $\lambda_3$ using a slightly more complicated derivation:
+After estimating $\lambda_1$, we can estimate $\lambda_2$ and $\lambda_3$ using the fact that the rate of exiting state $B$ equals $\lambda_2+\lambda_3$ (exponential race):
 \begin{align*}
 	P_t(A,B) & = \int_0^t P(t_A) P(t_B \geq t_1 - t_A) dt_A \\
 	& = \int_0^t \lambda_1 e^{-\lambda_1 t_A} (e^{-(\lambda_2+\lambda_3)(t-t_A})dt_A \\
@@ -160,13 +160,48 @@ Because we know both the number of clusters and that the observations are distri
 		\includegraphics[scale=0.25]{Fig4.png}
 \end{figure*}
 
-After assigning points to states, we can estimate the exponential rates just as before: $\hat{\lambda}_1 = 0.501, \hat{\lambda}_2 = 0.997,$ and $\hat{\lambda}_3 = 0.283$. We still seem to do reasonably well. The problem with this approach is that the estimators for $\lambda_1$, $\lambda_2$, and $\lambda_3$ are complicated and hard to analyze; extending these types of estimators to other tree-structures is not clear.
+After assigning points to states, we can estimate the exponential rates just as before: $\hat{\lambda}_1 = 0.501, \hat{\lambda}_2 = 0.997,$ and $\hat{\lambda}_3 = 0.283$. We still seem to do reasonably well. The problem with this approach is that the estimators for $\lambda_1$, $\lambda_2$, and $\lambda_3$ are complicated and hard to analyze; extending these types of estimators to other tree-structures is not clear. Moreover, deepening our tree structure will involve longer sums of exponential random variables with different rate parameters, further complicating the estimators.
 
 \section{A simpler estimator}
-Assuming that our CTMC is linear, we can derive a simple estimator for each $\lambda_i$: 
+If we assume that we can track data points (i.e. we observe the state of each point at each sampling time), we can can derive a simple estimator for each sum of rate parameters leaving the same state. Let's say that at time $t_j$, we observe $N_k$ points at state $k$, and at time $t_{j+1}$, we observe $M_k$ of the $N_k$ points remain in state $k$. Let $\lambda_1^{(k)},\dots,\lambda_{L_k}^{(k)}$ represent the rate parameters on the edges leaving state $k$. The rate of leaving state $k$ is modeled by a race between $L_k$ exponentials (or an exponential with rate $\Lambda = \lambda_1^{(k)} + \dots + \lambda_{L_k}^{(k)}$). Let $T = t_{j+1}-t_j$. Then
 \begin{align*}
-	P(\mbox{leave state $S_0$ by time $t$}) = P(t_{S_0} >= t)
+	\frac{M_k}{N_k} = P(\mbox{leave state $S_k$ by time $T$}) = P(t_{S_k} \geq T) = \exp\left(-T \sum_{i=1}^{L_k} \lambda_i^{(k)} \right) = \exp (-T\Lambda).
 \end{align*}
+
+Assuming that our observation times are evenly spaced at $T$, we can use the memoryless property of exponential distributions to effectively increase our number of samples used for estimating $\Lambda$. Let $M_k(t)$ represent the number of cells in state $S_k$ at both times $t-T$ and $t$, and let $N_k(t)$ represent the number of cells in state $S_k$ at time $t$. If our last observation time is at $t'T$, then
+\begin{align*}
+	\frac{\sum_{t=1}^{t'} M_k(t)}{\sum_{t=0}^{t'} N_k(t)} = \exp(-T\Lambda),
+\end{align*} 
+
+which we will call $\hat{p}$ for convenience. Intuitively, $\hat{p}$ is simply ratio of the total number of samples that have ever moved out of state $S_k$ to the total number of samples that were ever in state $S_k$. Our estimator for ${\Lambda}$ is
+\begin{align*}
+	\hat{\Lambda} = - \frac{1}{T} \log ( \hat{p}). 
+\end{align*}
+Both estimators are unbiased, and
+\begin{align*}
+	\mathbb{E}\hat{\Lambda} & = \Lambda \\
+	\mathbb{E}\hat{p} & = p = \exp(-T \Lambda)
+\end{align*}
+
+We can bound our estimator for $\exp(-T\Lambda)$ using the Chernoff Bound:
+\begin{align*}
+	\mathbb{P} \left( \left| \hat{p} - \exp(-T\Lambda) \right| \geq \epsilon \right)  \leq \exp\left(-2\epsilon \sum_{t=0}^{t'} N_k(t) \right) = \delta.
+\end{align*}
+From this bound we can construct 1-$\delta$ confidence intervals for $\Lambda$:
+\begin{align*}
+	& \exp(- \hat{\Lambda} T) \in {p} \pm \epsilon \\
+	\implies & \hat{\Lambda} \in -\frac{1}{T} \log ({p} \pm \epsilon) \\
+	\implies & \hat{\Lambda} \in \lambda - \frac{1}{T} \log \left( 1 \pm \frac{\epsilon}{p} \right) \\
+	\implies & \hat{\Lambda} \in \Lambda \pm \frac{1}{T} \frac{\epsilon}{\exp(-\Lambda T)}.
+\end{align*}
+Solving for the $\epsilon$ in the Chernoff bound, we can express this 1-$\delta$ confidence interval as:
+\begin{align*}
+	\hat{\Lambda} \in \Lambda \pm \frac{1}{T\exp(-\Lambda T)} \sqrt{\frac{\log \frac{1}{\delta}+\log 2}{\sum_{t=0}^{t'} N_k(t)}} 
+\end{align*}
+
+After obtaining an estimate for $\Lambda$, we can estimate the individual $\lambda_1^{(k)},\dots,\lambda_{L_k}^{(k)}$ using the observed ratios of the numbers of samples that end up in each possible descendant branch. For example, if three edges leave $S_k$ with rates $\lambda_1^{(k)},\lambda_2^{(k)},\lambda_3^{(k)}$ leading a sample to states $S_{k+1},S_{k+2},S_{k+3}$, respectively, then the ratio of the number of samples that move from $S_k$ to $S_{k+1}$ or any of $S_{k+1}$'s descendants to the number of samples that move from $S_k$ to $S_{k+2}$ or any of $S_{k+1}$'s descendants is equal to $\lambda_1^{(k)}/\lambda_2^{(k)}$. We can solve a system of equations to obtain values for each $\lambda_i^(k)$. \\
+
+Given enough samples, a tree-structured CTMC, a small enough sampling period $T$, and the state of each cell at each sampling time, we can estimate all rate parameters of the CTMC. We tested this estimator on the tree structure example from Figure 2, and we obtained reasonable estimates of $\lambda_1 = 0.529, \lambda_2 = 1.07, \lambda_3 = 0.202$.
 
 \section{Future steps}
 Initial simulations seem to generate promising results because we have made several strong simplifying assumptions. In the case of the dataset presented by [1], individual data points are high-dimensional vectors (length 47192), making EM much more difficult to compute. Determining the correct method for reducing the dimensionality of the data proves to be a challenge. Additionally, we have no reason to believe that observations come from one of $K$ Gaussian distributions. We have no reason to believe that the Gaussian, equal-variance, or independence assumptions are true. In fact, we intuitively expect the evolution of a cell to be a gradual process, and therefore $\mu$ should be a function of some latent time variable. Finally, the set of cells sampled using real data is completely different at each observation time. Ideally, we would be able to account for the the fact that we do not observe time 0 as the first observation does not show a homogenous population of cells all of one type. \\
